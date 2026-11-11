@@ -6,3 +6,4 @@ out/
 *.tsbuildinfo
 core
 *.log
+git-sync.log
