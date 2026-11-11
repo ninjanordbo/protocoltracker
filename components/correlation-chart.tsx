@@ -248,7 +248,7 @@ export default function CorrelationChart({ days, protocols, events }: Correlatio
                   strokeDasharray="3 3"
                   opacity={0.75}
                 />
-                <circle cx={x} cy={PAD_T - 6} r={3} fill={EVENT_COLOR} />
+                <circle cx={x} cy={PAD_T - 6} r={i === hoverDay ? 5.5 : 3} fill={EVENT_COLOR} />
                 <text
                   x={x + 5}
                   y={labelY + 8}
@@ -458,6 +458,20 @@ export default function CorrelationChart({ days, protocols, events }: Correlatio
                 })}
               </div>
             )}
+            {events
+              .filter((e) => e.date === hover.date)
+              .map((e) => (
+                <div
+                  key={e.id}
+                  className="mt-1.5 pt-1.5 border-t border-cream/15 flex items-center gap-1.5 py-0.5"
+                >
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: EVENT_COLOR }}
+                  />
+                  <span className="font-extrabold">{e.title}</span>
+                </div>
+              ))}
           </div>
         )}
       </div>
