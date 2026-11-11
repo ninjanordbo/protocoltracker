@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md border-b border-border">
-        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <div className="max-w-[1400px] mx-auto px-4 h-12 sm:h-14 flex items-center justify-between gap-4">
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <span className="w-7 h-7 rounded-full bg-ink flex items-center justify-center">
               <span className="flex gap-[3px]">
@@ -60,7 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* Content */}
-      <main className="max-w-[1400px] mx-auto px-4 py-6 pb-28 sm:pb-10">{children}</main>
+      <main className="max-w-[1400px] mx-auto px-4 py-4 sm:py-6 pb-28 sm:pb-10">{children}</main>
 
       {/* Mobile tab bar */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-paper/95 backdrop-blur-md border-t border-border">

@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Check, LineChart } from 'lucide-react';
-import MoodPicker from '@/components/mood-picker';
+import MoodPicker, { MoodChip } from '@/components/mood-picker';
 import { DayLog, Protocol, todayStr } from '@/lib/tracker-types';
 import { cn } from '@/lib/utils';
 
@@ -28,7 +28,6 @@ export default function LogPage() {
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [mood, setMood] = useState<{ x: number; y: number } | null>(null);
   const [metrics, setMetrics] = useState({ sleep: null as number | null, health: null as number | null, pain: null as number | null });
-  const [touched, setTouched] = useState<Set<string>>(new Set());
   const [checks, setChecks] = useState<Record<string, boolean | null>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -60,7 +59,6 @@ export default function LogPage() {
     setMood(log && log.moodX !== null && log.moodY !== null ? { x: log.moodX, y: log.moodY } : null);
     setMetrics({ sleep: log?.sleep ?? null, health: log?.health ?? null, pain: log?.pain ?? null });
     setChecks(log?.protocols ?? {});
-    setTouched(new Set());
     setSaved(false);
   }, [date, logs]);
 
@@ -107,18 +105,17 @@ export default function LogPage() {
     }
   };
 
-  const activeProtocols = useMemo(() => protocols, [protocols]);
   const hasEntry = logs.some((l) => l.date === date);
 
   const sliderRow = (key: 'sleep' | 'health' | 'pain', label: string, hint: string) => {
     const val = metrics[key] ?? 5;
     return (
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-sm font-extrabold">{label}</label>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-[13px] font-extrabold">{label}</label>
           <span
             className={cn(
-              'text-sm font-black tabular-nums px-2.5 py-0.5 rounded-full',
+              'text-xs font-black tabular-nums px-2 py-0.5 rounded-full',
               metrics[key] === null ? 'bg-secondary text-muted-foreground' : 'bg-ink text-cream'
             )}
           >
@@ -130,49 +127,47 @@ export default function LogPage() {
           min={1}
           max={10}
           value={val}
-          onChange={(e) => {
-            setMetrics((m) => ({ ...m, [key]: Number(e.target.value) }));
-            setTouched((t) => new Set(t).add(key));
-          }}
+          onChange={(e) => setMetrics((m) => ({ ...m, [key]: Number(e.target.value) }))}
           className="slider w-full"
           aria-label={label}
         />
-        <p className="text-[11px] text-muted-foreground font-semibold mt-1">{hint}</p>
+        <p className="text-[10px] text-muted-foreground font-semibold hidden sm:block">{hint}</p>
       </div>
     );
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-5">
+    <div className="space-y-2">
       {/* Date navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => setDate(addDays(date, -1))}
-          className="w-10 h-10 rounded-full bg-paper border border-border flex items-center justify-center shadow-sm active:scale-95 transition"
+          className="w-8 h-8 rounded-full bg-paper border border-border flex items-center justify-center shadow-sm active:scale-95 transition"
           aria-label="Previous day"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
         <div className="text-center">
-          <h1 className="font-black text-lg leading-tight">{fmt(date)}</h1>
-          {date === today && (
-            <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wide">
+          <h1 className="font-black text-base leading-tight">{fmt(date)}</h1>
+          {date === today ? (
+            <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wide">
               Today
             </span>
-          )}
-          {hasEntry && date !== today && (
-            <span className="text-[11px] font-extrabold text-muted-foreground uppercase tracking-wide">
-              Logged
-            </span>
+          ) : (
+            hasEntry && (
+              <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-wide">
+                Logged
+              </span>
+            )
           )}
         </div>
         <button
           onClick={() => setDate(addDays(date, 1))}
           disabled={date >= today}
-          className="w-10 h-10 rounded-full bg-paper border border-border flex items-center justify-center shadow-sm active:scale-95 transition disabled:opacity-30"
+          className="w-8 h-8 rounded-full bg-paper border border-border flex items-center justify-center shadow-sm active:scale-95 transition disabled:opacity-30"
           aria-label="Next day"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -182,64 +177,65 @@ export default function LogPage() {
         </div>
       ) : (
         <>
-          {/* Mood */}
-          <section className="bg-paper border border-border rounded-3xl p-5 shadow-sm space-y-4">
-            <div>
-              <h2 className="font-black">Mood</h2>
-              <p className="text-xs text-muted-foreground font-semibold mt-0.5">
-                One tap: how pleasant did today feel, and how much energy did you have?
-              </p>
-            </div>
-            <MoodPicker value={mood} onChange={setMood} />
-          </section>
-
-          {/* Metrics */}
-          <section className="bg-paper border border-border rounded-3xl p-5 shadow-sm space-y-6">
-            <h2 className="font-black">Body & rest</h2>
-            {sliderRow('sleep', 'Sleep', '1 = terrible · 10 = deeply rested')}
-            {sliderRow('health', 'Health', '1 = sick · 10 = thriving')}
-            {sliderRow('pain', 'Pain', '1 = none · 10 = severe')}
-          </section>
-
-          {/* Protocols */}
-          {activeProtocols.length > 0 && (
-            <section className="bg-paper border border-border rounded-3xl p-5 shadow-sm space-y-3">
-              <h2 className="font-black">Protocols</h2>
-              <div className="flex flex-wrap gap-2">
-                {activeProtocols.map((p) => {
-                  const v = checks[p.slug];
-                  return (
-                    <button
-                      key={p.slug}
-                      onClick={() => cycle(p.slug)}
-                      className={cn(
-                        'px-4 py-2.5 rounded-full text-sm font-extrabold border transition active:scale-95',
-                        v === true
-                          ? 'bg-ink text-cream border-ink'
-                          : v === false
-                            ? 'bg-ember-soft text-ember border-ember/40 line-through'
-                            : 'bg-background text-muted-foreground border-border'
-                      )}
-                    >
-                      {v === true ? '✓ ' : v === false ? '✕ ' : ''}
-                      {p.name}
-                    </button>
-                  );
-                })}
+          <div className={cn('grid gap-3', protocols.length > 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-2')}>
+            {/* Mood */}
+            <section className="bg-paper border border-border rounded-3xl p-3 sm:p-4 shadow-sm space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-black text-sm shrink-0">Mood</h2>
+                <MoodChip value={mood} />
               </div>
-              <p className="text-[11px] text-muted-foreground font-semibold">
-                Tap to cycle: unset → done → skipped. Unset days show as faint dashes on the
-                timeline.
-              </p>
+              <MoodPicker value={mood} onChange={setMood} />
             </section>
-          )}
+
+            {/* Body & rest */}
+            <section className="bg-paper border border-border rounded-3xl p-3 sm:p-4 shadow-sm space-y-2.5">
+              <h2 className="font-black text-sm">Body & rest</h2>
+              {sliderRow('sleep', 'Sleep', '1 = terrible · 10 = deeply rested')}
+              {sliderRow('health', 'Health', '1 = sick · 10 = thriving')}
+              {sliderRow('pain', 'Pain', '1 = none · 10 = severe')}
+            </section>
+
+            {/* Protocols */}
+            {protocols.length > 0 && (
+              <section className="bg-paper border border-border rounded-3xl p-3 sm:p-4 shadow-sm space-y-2.5">
+                <div>
+                  <h2 className="font-black text-sm">Protocols</h2>
+                  <p className="text-[11px] text-muted-foreground font-semibold">
+                    Tap to cycle: unset → done → skipped
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {protocols.map((p) => {
+                    const v = checks[p.slug];
+                    return (
+                      <button
+                        key={p.slug}
+                        onClick={() => cycle(p.slug)}
+                        className={cn(
+                          'px-3 py-1.5 rounded-full text-xs font-extrabold border transition active:scale-95',
+                          v === true
+                            ? 'bg-ink text-cream border-ink'
+                            : v === false
+                              ? 'bg-ember-soft text-ember border-ember/40 line-through'
+                              : 'bg-background text-muted-foreground border-border'
+                        )}
+                      >
+                        {v === true ? '✓ ' : v === false ? '✕ ' : ''}
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </div>
 
           {/* Save */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={save}
               disabled={isSaving}
-              className="flex-1 bg-ink text-cream font-black py-4 rounded-full text-sm shadow-lg active:scale-[0.98] transition disabled:opacity-60 flex items-center justify-center gap-2"
+              className="flex-1 bg-ink text-cream font-black py-2.5 rounded-full text-sm shadow-lg active:scale-[0.98] transition disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isSaving ? (
                 <span className="w-4 h-4 rounded-full border-2 border-cream/40 border-t-cream animate-spin" />
@@ -251,7 +247,7 @@ export default function LogPage() {
             {saved && (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 bg-butter text-ink font-black px-4 py-4 rounded-full text-sm active:scale-[0.98] transition"
+                className="inline-flex items-center gap-1.5 bg-butter text-ink font-black px-4 py-3 rounded-full text-sm active:scale-[0.98] transition"
               >
                 <LineChart className="w-4 h-4" />
                 View
