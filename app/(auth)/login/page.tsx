@@ -1,0 +1,124 @@
+
+'use client';
+
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Activity } from 'lucide-react';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Invalid email or password');
+      } else {
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch (err) {
+      setError('Something went wrong');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-sage/20 rounded-full blur-3xl animate-pulse-subtle" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-coral/20 rounded-full blur-3xl animate-pulse-subtle delay-200" />
+      </div>
+
+      <div className="w-full max-w-md opacity-0 animate-fade-in-up">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary mb-5 shadow-lg animate-float">
+            <Activity className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-foreground mb-3 tracking-tight">
+            Protocol Tracker
+          </h1>
+          <p className="text-muted-foreground text-base">
+            Discover correlations between your protocols and wellness
+          </p>
+        </div>
+
+        <div className="bg-card/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-border p-10">
+          <h2 className="text-2xl font-semibold text-foreground mb-8">Sign In</h2>
+
+          {error && (
+            <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30">
+              <p className="text-sm text-destructive font-medium">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-foreground/80 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-coral focus:border-transparent outline-none transition-all duration-200"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-foreground/80 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3.5 rounded-xl border border-border bg-background focus:ring-2 focus:ring-coral focus:border-transparent outline-none transition-all duration-200"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 px-4 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-coral focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Don&apos;t have an account?{' '}
+              <Link href="/signup" className="font-medium text-coral hover:text-coral/80 transition-colors">
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

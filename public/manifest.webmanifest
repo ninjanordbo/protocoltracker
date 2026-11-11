@@ -1,0 +1,19 @@
+{
+  "name": "Protocol Tracker",
+  "short_name": "Protocols",
+  "description": "Track how your protocols and life events correlate with your mood, sleep, health and pain.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF8F1",
+  "theme_color": "#FBF8F1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
